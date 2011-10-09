@@ -1,0 +1,5 @@
+*.o
+bin/
+.vimfiles.rssreminder/
+quick_gen_project_rssreminder_autogen.sh
+rssreminder.vimentry
