@@ -1,0 +1,15 @@
+<body>
+<div a1="abc1" a2="aBc2" A3="abc3"a4='ab"c4'>
+aaaa
+</div>
+abAGAa
+<div>
+abc
+</div>
+<script>
+aaaa
+<div>
+aaaaabc
+</div>
+</script>
+</body>
