@@ -1,0 +1,152 @@
+WT_ITM_SRT	WT_ITM_SRT	WT_ITM_SRT		 "<"
+itemListTotal: 1
+WT_NOG	WT_ITM_TLE	WT_ITM_TLE		 "body"
+body
+WT_ITM_END	WT_ITM_END	WT_ITM_END		 ">"
+WT_ITM_SRT	WT_ITM_SRT	WT_ITM_SRT		 "<"
+itemListTotal: 2
+WT_NOG	WT_ITM_TLE	WT_ITM_TLE		 "div"
+div
+WT_NOG	WT_ITM_ATT	WT_ITM_ATT		 "a1"
+a1
+ tot: 0
+WT_SYM_EQU	WT_SYM_EQU	WT_SYM_EQU		 "="
+WT_NOG	WT_ITM_VAL	WT_ITM_VAL		 ""abc1""
+"abc1"
+WT_NOG	WT_ITM_ATT	WT_ITM_ATT		 "a2"
+a2
+ tot: 1
+WT_SYM_EQU	WT_SYM_EQU	WT_SYM_EQU		 "="
+WT_NOG	WT_ITM_VAL	WT_ITM_VAL		 ""abc2""
+"aBc2"
+WT_NOG	WT_ITM_ATT	WT_ITM_ATT		 "a3"
+a3
+ tot: 2
+WT_SYM_EQU	WT_SYM_EQU	WT_SYM_EQU		 "="
+WT_NOG	WT_ITM_VAL	WT_ITM_VAL		 ""abc3""
+"abc3"
+WT_NOG	WT_ITM_ATT	WT_ITM_ATT		 "a4"
+a4
+ tot: 3
+WT_SYM_EQU	WT_SYM_EQU	WT_SYM_EQU		 "="
+WT_NOG	WT_ITM_VAL	WT_ITM_VAL		 "'ab"c4'"
+'ab"c4'
+WT_ITM_END	WT_ITM_END	WT_ITM_END		 ">"
+WT_NOG	WT_NOG	WT_NOG		 "aaaa"
+aaaa
+WT_ITM_SRT	WT_ITM_SRT	WT_ITM_SRT		 "<"
+itemListTotal: 3
+aaaa
+itemListTotal: 4
+WT_SYM_SLH	WT_SYM_SLH	WT_SYM_SLH		 "/"
+WT_NOG	WT_ITM_TLE	WT_ITM_TLE		 "div"
+div
+WT_ITM_END	WT_ITM_END	WT_ITM_END		 ">"
+WT_NOG	WT_NOG	WT_NOG		 "abagaa"
+abAGAa
+WT_ITM_SRT	WT_ITM_SRT	WT_ITM_SRT		 "<"
+itemListTotal: 5
+abAGAa
+itemListTotal: 6
+WT_NOG	WT_ITM_TLE	WT_ITM_TLE		 "div"
+div
+WT_ITM_END	WT_ITM_END	WT_ITM_END		 ">"
+WT_NOG	WT_NOG	WT_NOG		 "abc"
+abc
+WT_ITM_SRT	WT_ITM_SRT	WT_ITM_SRT		 "<"
+itemListTotal: 7
+abc
+itemListTotal: 8
+WT_SYM_SLH	WT_SYM_SLH	WT_SYM_SLH		 "/"
+WT_NOG	WT_ITM_TLE	WT_ITM_TLE		 "div"
+div
+WT_ITM_END	WT_ITM_END	WT_ITM_END		 ">"
+WT_ITM_SRT	WT_ITM_SRT	WT_ITM_SRT		 "<"
+itemListTotal: 9
+WT_NOG	WT_ITM_TLE	WT_ITM_TLE		 "script"
+script
+WT_ITM_END	WT_ITM_END	WT_ITM_END		 ">"
+WT_NOG	WT_NOG	WT_NOG		 "aaaa"
+aaaa
+WT_ITM_SRT	WT_ITM_SRT	WT_NOG		 "<"
+<
+WT_NOG	WT_NOG	WT_NOG		 "div"
+div
+WT_ITM_END	WT_NOG	WT_NOG		 ">"
+>
+WT_NOG	WT_NOG	WT_NOG		 "aaaaabc"
+aaaaabc
+WT_ITM_SRT	WT_ITM_SRT	WT_NOG		 "<"
+<
+WT_SYM_SLH	WT_NOG	WT_NOG		 "/"
+/
+WT_NOG	WT_NOG	WT_NOG		 "div"
+div
+WT_ITM_END	WT_NOG	WT_NOG		 ">"
+>
+WT_ITM_SRT	WT_ITM_SRT	WT_ITM_SRT		 "<"
+itemListTotal: 10
+aaaa<div>aaaaabc</div>
+itemListTotal: 11
+WT_SYM_SLH	WT_SYM_SLH	WT_SYM_SLH		 "/"
+WT_NOG	WT_ITM_TLE	WT_ITM_TLE		 "script"
+script
+WT_ITM_END	WT_ITM_END	WT_ITM_END		 ">"
+WT_ITM_SRT	WT_ITM_SRT	WT_ITM_SRT		 "<"
+itemListTotal: 12
+WT_SYM_SLH	WT_SYM_SLH	WT_SYM_SLH		 "/"
+WT_NOG	WT_ITM_TLE	WT_ITM_TLE		 "body"
+body
+WT_ITM_END	WT_ITM_END	WT_ITM_END		 ">"
+
+
+========================
+
+IT_ITM		 nodeSubscript: 1	 parent: 0
+<body>
+
+
+	IT_ITM		 nodeSubscript: 2	 parent: 1
+	<div a1="abc1" a2="aBc2" a3="abc3" a4='ab"c4'>
+
+
+		IT_TXT		 nodeSubscript: 3	 parent: 2
+		aaaa
+
+
+		IT_TAL		 nodeSubscript: 4	 parent: 2
+		</div>
+
+
+	IT_TXT		 nodeSubscript: 5	 parent: 1
+	abAGAa
+
+
+	IT_ITM		 nodeSubscript: 6	 parent: 1
+	<div>
+
+
+		IT_TXT		 nodeSubscript: 7	 parent: 6
+		abc
+
+
+		IT_TAL		 nodeSubscript: 8	 parent: 6
+		</div>
+
+
+	IT_ITM		 nodeSubscript: 9	 parent: 1
+	<script>
+
+
+		IT_TXT		 nodeSubscript: 10	 parent: 9
+		aaaa<div>aaaaabc</div>
+
+
+		IT_TAL		 nodeSubscript: 11	 parent: 9
+		</script>
+
+
+	IT_TAL		 nodeSubscript: 12	 parent: 1
+	</body>
+
+
