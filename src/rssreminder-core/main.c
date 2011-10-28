@@ -34,6 +34,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define DEBUG_MODE 0
+
 #define MAX_FILE_LENGTH 3000000
 #define MAX_ITEMLIST_LENGTH 100000 
 
@@ -106,102 +108,6 @@ int staticFetch(char * wordlist, char * word, int offset, int len){
         tword[total++] = tolower(wordlist[offset + i]);
     tword[total] = '\0';
     strcpy(word, tword);
-    return 1;
-}
-
-int fetchWordOld(char * wordlist, char * word, char * unformattedWord, int * offset){
-    int total=0;
-    char tword[1000000];
-    char ufTword[1000000];
-    char foresee[100];
-    int double_quote = 0;
-    int single_quote = 0;
-    int backslash = 0;
-    int len, i;
-    char ch1,ch2,ch3;
-    
-    while (*offset<strlen(wordlist) && !isgraphPlus(wordlist[*offset])) (*offset)++;
-    if (*offset>=strlen(wordlist)) return 0;
-    while (*offset<strlen(wordlist) 
-        && ( (isgraphPlus(wordlist[*offset]) && !specialSymbol(wordlist[*offset])) 
-            || isodd(single_quote) || isodd(double_quote))){
-                
-        tword[total] = tolower(wordlist[*offset]);
-        ufTword[total] = wordlist[*offset];
-
-        total++;
-        (*offset)++;
-        
-        if (tword[total-1] == '\''){
-            if (single_quote > 0 || double_quote == 0){
-                single_quote++;
-                if (total > 1 && single_quote == 1){
-                    total--;
-                    (*offset)--;
-                    break;
-                }
-                if (single_quote == 2) break;
-            }
-        }
-        if (tword[total-1] == '"'){
-            if (double_quote > 0 || single_quote == 0){
-                double_quote++;
-                if (total > 1 && double_quote == 1){
-                    total--;
-                    (*offset)--;
-                    break;
-                }
-                if (double_quote == 2) break;
-            }
-        }
-            
-    }
-    if (total == 0)
-        if (*offset<strlen(wordlist) && specialSymbol(wordlist[*offset])){
-            tword[total] = tolower(wordlist[*offset]);
-            ufTword[total] = wordlist[*offset];
-
-            total++;
-            (*offset)++;
-
-            if (tword[total-1] == '<'){
-                staticFetch(wordlist, foresee, *offset, 3);
-                if (strcmp(foresee, "!--")==0){
-                    tword[total]='\0';
-                    ufTword[total]='\0';
-                    strcat(tword, "!--");
-                    strcat(ufTword,"!--");
-                    total+=3;
-                    (*offset)+=3;
-                    ch1=ch2=ch3='\0';
-                    while (!(ch1=='-' && ch2=='-' && ch3=='>') && *offset<strlen(wordlist)){
-                        ch1=ch2;ch2=ch3;
-                        ufTword[total]=tword[total]=ch3=wordlist[*offset];
-                        total++;
-                        (*offset)++;
-                    }
-                }
-            }
-        }
-        // while (*offset<strlen(wordlist) && specialSymbol(wordlist[*offset])){
-        //     tword[total] = tolower(wordlist[*offset]);
-        //     total++;
-        //     (*offset)++;
-        //     break;
-        // }
-    tword[total]='\0';
-    ufTword[total]='\0';
-    
-    // len = strlen(tword);
-    // if (len >= 2){
-    //     if (tword[0] == tword[len-1] && (tword[0] == '\'' || tword[0] == '"')){
-    //         for (i=0;i<len-2;i++) tword[i] = tword[i+1];
-    //         tword[len-2] = '\0';
-    //     }
-    // }
-        
-    strcpy(word, tword);
-    strcpy(unformattedWord, ufTword);
     return 1;
 }
 
@@ -429,18 +335,21 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
         wordTypePrePre = wordTypePre;
         wordTypePre = wordType;
         wordType = checkWordType(word);
-        printWT(wordType);
-        printf("\t");
+        if (DEBUG_MODE) printWT(wordType);
+        if (DEBUG_MODE) printf("\t");
+
         wordType = checkWordTypePlus(type, wordTypePrePre, wordTypePre, wordType);
-        printWT(wordType);
-        printf("\t");
+        if (DEBUG_MODE) printWT(wordType);
+        if (DEBUG_MODE) printf("\t");
+
         wordType = checkWordTypeForScript(type, scriptDeep, wordType, fileContent, offset);
-        printWT(wordType);
-        printf("\t\t \"%s\"\n",word);
+        if (DEBUG_MODE) printWT(wordType);
+        if (DEBUG_MODE) printf("\t\t \"%s\"\n",word);
+
         if (wordType == WT_ITM_SRT){
             if (strlen(tword) > 0){
                 (*itemListTotal)++;
-                printf("itemListTotal: %d\n",*itemListTotal);
+                if (DEBUG_MODE) printf("itemListTotal: %d\n",*itemListTotal);
                 itemList[*itemListTotal].type = IT_TXT;
                 str = (char *) malloc(strlen(tword)+1);
                 strcpy(str, tword);
@@ -450,12 +359,12 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
                 itemList[*itemListTotal].tail = 0;
                 parentConfirm[*itemListTotal] = 0;
                 tailConfirm[*itemListTotal] = 0;
-                printf("%s\n", tword);
+                if (DEBUG_MODE) printf("%s\n", tword);
                 strcpy(tword, "");
             }
 
             (*itemListTotal)++;
-            printf("itemListTotal: %d\n",*itemListTotal);
+            if (DEBUG_MODE) printf("itemListTotal: %d\n",*itemListTotal);
             itemList[*itemListTotal].type = IT_ITM;
             itemList[*itemListTotal].title = NULL;
             itemList[*itemListTotal].attrTotal = 0;
@@ -490,27 +399,27 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
         }else if (wordType == WT_ITM_TLE){
             title = (char *) malloc(strlen(word)+1);
             strcpy(title, word);
-                printf("%s\n", word);
+                if (DEBUG_MODE) printf("%s\n", word);
             itemList[*itemListTotal].title = title;
         }else if (wordType == WT_ITM_ATT){
             tot = itemList[*itemListTotal].attrTotal++;
             str = (char *) malloc(strlen(word)+1);
             strcpy(str, word);
-                printf("%s\n", word);
-                printf(" tot: %d\n", tot);
+                if (DEBUG_MODE) printf("%s\n", word);
+                if (DEBUG_MODE) printf(" tot: %d\n", tot);
             itemList[*itemListTotal].attrTitle[ tot ] = str;
             itemList[*itemListTotal].attrValue[ tot ] = NULL;
         }else if (wordType == WT_ITM_VAL){
             tot = itemList[*itemListTotal].attrTotal -1;
             str = (char *) malloc(strlen(unformattedWord)+1);
             strcpy(str, unformattedWord);
-                printf("%s\n", unformattedWord);
+                if (DEBUG_MODE) printf("%s\n", unformattedWord);
             itemList[*itemListTotal].attrValue[ tot ] = str;
         }else if (wordType == WT_SYM_SLH){
             itemList[*itemListTotal].type = IT_TAL;
         }else if (wordType == WT_NOG){
             strcat(tword, unformattedWord);
-            printf("%s\n", unformattedWord);
+            if (DEBUG_MODE) printf("%s\n", unformattedWord);
         }
         // printf("%s\n", word);
     }
@@ -519,7 +428,7 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
         itemList[*itemListTotal].type = IT_TXT;
         str = (char *) malloc(strlen(tword)+1);
         strcpy(str, tword);
-                printf("%s\n", word);
+                if (DEBUG_MODE) printf("%s\n", word);
         itemList[*itemListTotal].title = str;
         itemList[*itemListTotal].attrTotal = 0;
         itemList[*itemListTotal].parent = parent;
@@ -528,11 +437,13 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
     deepLen[0] = -1;
     for (subscript = 1; subscript <= *itemListTotal; subscript++)
         deepLen[subscript] = deepLen[ itemList[subscript].parent ] + 1;
-    printf("\n\n========================\n\n");
-    int i;
-    for (i=1; i<=*itemListTotal;i++){
-        printItemNode(itemList, i, deepLen[i]);
-        printf("\n\n");
+    if (DEBUG_MODE){
+        printf("\n\n========================\n\n");
+        int i;
+        for (i=1; i<=*itemListTotal;i++){
+            printItemNode(itemList, i, deepLen[i]);
+            printf("\n\n");
+        }
     }
     return 1;
 }
