@@ -32,12 +32,37 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <getopt.h>
 #include <string.h>
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1 
 
 #define MAX_FILE_LENGTH 3000000
 #define MAX_ITEMLIST_LENGTH 100000 
+
+struct globalArgs_t {
+	int noIndex;				/* -I option */
+	char *langCode;				/* -l option */
+	const char *outFileName;	/* -o option */
+	FILE *outFile;
+	int verbosity;				/* -v option */
+	char **inputFiles;			/* input files */
+	int numInputFiles;			/* # of input files */
+    int debug_mode;             /* --debug option */
+} globalArgs;
+
+static const char *optString = "Il:o:vh?";
+
+static const struct option longOpts[] = {
+	{ "no-index", no_argument, NULL, 'I' },
+	{ "language", required_argument, NULL, 'l' },
+	{ "output", required_argument, NULL, 'o' },
+	{ "verbose", no_argument, NULL, 'v' },
+	{ "debug", no_argument, NULL, 0 },
+	{ "help", no_argument, NULL, 'h' },
+	{ NULL, no_argument, NULL, 0 }
+};
 
 enum{
     IT_NOG,     // Nothing
@@ -72,6 +97,11 @@ char fileContent[MAX_FILE_LENGTH];
 int fileContentLen;
 struct itemnode_t itemList[MAX_ITEMLIST_LENGTH];
 int itemListTotal;
+
+int display_usage(){
+    printf("rssreminder-core\n");
+    return 1;
+}
 
 int isodd(int num){
     return num % 2;
@@ -335,21 +365,21 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
         wordTypePrePre = wordTypePre;
         wordTypePre = wordType;
         wordType = checkWordType(word);
-        if (DEBUG_MODE) printWT(wordType);
-        if (DEBUG_MODE) printf("\t");
+        if (globalArgs.debug_mode) printWT(wordType);
+        if (globalArgs.debug_mode) printf("\t");
 
         wordType = checkWordTypePlus(type, wordTypePrePre, wordTypePre, wordType);
-        if (DEBUG_MODE) printWT(wordType);
-        if (DEBUG_MODE) printf("\t");
+        if (globalArgs.debug_mode) printWT(wordType);
+        if (globalArgs.debug_mode) printf("\t");
 
         wordType = checkWordTypeForScript(type, scriptDeep, wordType, fileContent, offset);
-        if (DEBUG_MODE) printWT(wordType);
-        if (DEBUG_MODE) printf("\t\t \"%s\"\n",word);
+        if (globalArgs.debug_mode) printWT(wordType);
+        if (globalArgs.debug_mode) printf("\t\t \"%s\"\n",word);
 
         if (wordType == WT_ITM_SRT){
             if (strlen(tword) > 0){
                 (*itemListTotal)++;
-                if (DEBUG_MODE) printf("itemListTotal: %d\n",*itemListTotal);
+                if (globalArgs.debug_mode) printf("itemListTotal: %d\n",*itemListTotal);
                 itemList[*itemListTotal].type = IT_TXT;
                 str = (char *) malloc(strlen(tword)+1);
                 strcpy(str, tword);
@@ -359,12 +389,12 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
                 itemList[*itemListTotal].tail = 0;
                 parentConfirm[*itemListTotal] = 0;
                 tailConfirm[*itemListTotal] = 0;
-                if (DEBUG_MODE) printf("%s\n", tword);
+                if (globalArgs.debug_mode) printf("%s\n", tword);
                 strcpy(tword, "");
             }
 
             (*itemListTotal)++;
-            if (DEBUG_MODE) printf("itemListTotal: %d\n",*itemListTotal);
+            if (globalArgs.debug_mode) printf("itemListTotal: %d\n",*itemListTotal);
             itemList[*itemListTotal].type = IT_ITM;
             itemList[*itemListTotal].title = NULL;
             itemList[*itemListTotal].attrTotal = 0;
@@ -399,27 +429,27 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
         }else if (wordType == WT_ITM_TLE){
             title = (char *) malloc(strlen(word)+1);
             strcpy(title, word);
-                if (DEBUG_MODE) printf("%s\n", word);
+                if (globalArgs.debug_mode) printf("%s\n", word);
             itemList[*itemListTotal].title = title;
         }else if (wordType == WT_ITM_ATT){
             tot = itemList[*itemListTotal].attrTotal++;
             str = (char *) malloc(strlen(word)+1);
             strcpy(str, word);
-                if (DEBUG_MODE) printf("%s\n", word);
-                if (DEBUG_MODE) printf(" tot: %d\n", tot);
+                if (globalArgs.debug_mode) printf("%s\n", word);
+                if (globalArgs.debug_mode) printf(" tot: %d\n", tot);
             itemList[*itemListTotal].attrTitle[ tot ] = str;
             itemList[*itemListTotal].attrValue[ tot ] = NULL;
         }else if (wordType == WT_ITM_VAL){
             tot = itemList[*itemListTotal].attrTotal -1;
             str = (char *) malloc(strlen(unformattedWord)+1);
             strcpy(str, unformattedWord);
-                if (DEBUG_MODE) printf("%s\n", unformattedWord);
+                if (globalArgs.debug_mode) printf("%s\n", unformattedWord);
             itemList[*itemListTotal].attrValue[ tot ] = str;
         }else if (wordType == WT_SYM_SLH){
             itemList[*itemListTotal].type = IT_TAL;
         }else if (wordType == WT_NOG){
             strcat(tword, unformattedWord);
-            if (DEBUG_MODE) printf("%s\n", unformattedWord);
+            if (globalArgs.debug_mode) printf("%s\n", unformattedWord);
         }
         // printf("%s\n", word);
     }
@@ -428,7 +458,7 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
         itemList[*itemListTotal].type = IT_TXT;
         str = (char *) malloc(strlen(tword)+1);
         strcpy(str, tword);
-                if (DEBUG_MODE) printf("%s\n", word);
+                if (globalArgs.debug_mode) printf("%s\n", word);
         itemList[*itemListTotal].title = str;
         itemList[*itemListTotal].attrTotal = 0;
         itemList[*itemListTotal].parent = parent;
@@ -437,7 +467,7 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
     deepLen[0] = -1;
     for (subscript = 1; subscript <= *itemListTotal; subscript++)
         deepLen[subscript] = deepLen[ itemList[subscript].parent ] + 1;
-    if (DEBUG_MODE){
+    if (globalArgs.debug_mode){
         printf("\n\n========================\n\n");
         int i;
         for (i=1; i<=*itemListTotal;i++){
@@ -472,11 +502,73 @@ int importFile( char * filename ){
     return 1;
 }
 
+int parseCmdOpt( int argc, char *argv[] ){
+    int opt = 0;
+    int longIndex = 0;
+    
+    /* Initialize globalArgs before we get to work. */
+    globalArgs.noIndex = 0;		/* false */
+    globalArgs.langCode = NULL;
+    globalArgs.outFileName = NULL;
+    globalArgs.outFile = NULL;
+    globalArgs.verbosity = 0;
+    globalArgs.inputFiles = NULL;
+    globalArgs.numInputFiles = 0;
+    globalArgs.debug_mode = 0;
+    
+    /* Process the arguments with getopt_long(), then 
+     * populate globalArgs. 
+     */
+    opt = getopt_long( argc, argv, optString, longOpts, &longIndex );
+    while( opt != -1 ) {
+        switch( opt ) {
+            case 'I':
+                globalArgs.noIndex = 1;	/* true */
+                break;
+                
+            case 'l':
+                globalArgs.langCode = optarg;
+                break;
+                
+            case 'o':
+                globalArgs.outFileName = optarg;
+                break;
+                
+            case 'v':
+                globalArgs.verbosity++;
+                break;
+                
+            case 'h':   /* fall-through is intentional */
+            case '?':
+                display_usage();
+                break;
+
+            case 0:     /* long option without a short arg */
+                if( strcmp( "debug", longOpts[longIndex].name ) == 0 ) {
+                    globalArgs.debug_mode = 1;
+                }
+                break;
+                
+            default:
+                /* You won't actually get here. */
+                break;
+        }
+        
+        opt = getopt_long( argc, argv, optString, longOpts, &longIndex );
+    }
+    
+    globalArgs.inputFiles = argv + optind;
+    globalArgs.numInputFiles = argc - optind;
+
+    return 1;
+}
+
 int main( int argc, char* argv[] ){
     char word[10000];
     int offset=0;
-    if (argc >= 2 )
-        importFile(argv[1]);
+    parseCmdOpt(argc,argv);
+    if (globalArgs.numInputFiles > 0)
+        importFile(globalArgs.inputFiles[0]);
     // printf("%s\n%d\n", fileContent, fileContentLen);
     // while ( fetchWord(fileContent, word, &offset))
     //     printf("%s\n", word);
