@@ -43,17 +43,6 @@
 
 
 
-static const char *optString = "Il:o:vh?";
-
-static const struct option longOpts[] = {
-	{ "no-index", no_argument, NULL, 'I' },
-	{ "rule", required_argument, NULL, 'r' },
-	{ "output", required_argument, NULL, 'o' },
-	{ "verbose", no_argument, NULL, 'v' },
-	{ "debug", no_argument, NULL, 0 },
-	{ "help", no_argument, NULL, 'h' },
-	{ NULL, no_argument, NULL, 0 }
-};
 
 int display_usage(){
     printf("rssreminder-core\n");
@@ -66,10 +55,10 @@ int parseCmdOpt( int argc, char *argv[] ){
     
     /* Initialize globalArgs before we get to work. */
     globalArgs.noIndex = 0;		/* false */
-    globalArgs.rule = NULL;
+    globalArgs.ruleFileName = NULL;
     globalArgs.outFileName = NULL;
     globalArgs.outFile = NULL;
-    globalArgs.verbosity = 0;
+    globalArgs.mode = MODE_PARSE_HTML;
     globalArgs.inputFiles = NULL;
     globalArgs.numInputFiles = 0;
     globalArgs.debug_mode = 0;
@@ -85,15 +74,21 @@ int parseCmdOpt( int argc, char *argv[] ){
                 break;
                 
             case 'r':
-                globalArgs.rule = optarg;
+                globalArgs.ruleFileName = optarg;
                 break;
                 
             case 'o':
                 globalArgs.outFileName = optarg;
                 break;
                 
-            case 'v':
-                globalArgs.verbosity++;
+            case 'm':
+                if (strcmp( optarg, "html") == 0 || strcmp( optarg, "parse") == 0){
+                    globalArgs.mode = MODE_PARSE_HTML;
+                }else if (strcmp( optarg, "xml" ) == 0 || strcmp( optarg, "generate" ) == 0){
+                    globalArgs.mode = MODE_GENERATE_XML;
+                }else{
+                    printf( "Error: unknown option value of --mode, %s.\n", optarg);
+                }
                 break;
                 
             case 'h':   /* fall-through is intentional */
@@ -125,15 +120,22 @@ int main( int argc, char* argv[] ){
     char word[10000];
     int offset=0;
     parseCmdOpt(argc,argv);
-    if (globalArgs.numInputFiles > 0)
-        importFile(globalArgs.inputFiles[0]);
-    // printf("%s\n%d\n", fileContent, fileContentLen);
-    // while ( fetchWord(fileContent, word, &offset))
-    //     printf("%s\n", word);
-    generateItemList(itemList, &itemListTotal);
-    if (globalArgs.outFileName != NULL)
-        exportXmlDom( globalArgs.outFileName, itemList, &itemListTotal);
-    else printf( "Error: export filename not specified.\n");
+    if ( globalArgs.mode == MODE_PARSE_HTML ){
+        if (globalArgs.numInputFiles > 0){
+            importFile(globalArgs.inputFiles[0]);
+            generateItemList(itemList, &itemListTotal);
+        }
+        if (globalArgs.outFileName != NULL)
+            exportXmlDom( globalArgs.outFileName, itemList, &itemListTotal);
+        else printf( "Error: export filename not specified.\n");
+    }else if ( globalArgs.mode == MODE_GENERATE_XML ){
+        if (globalArgs.numInputFiles > 0)
+            importXmlDom( globalArgs.inputFiles[0], itemList, &itemListTotal);
+        else printf( "Error: import filename not specified.\n");
+        if (globalArgs.outFileName != NULL)
+            exportXmlDom( globalArgs.outFileName, itemList, &itemListTotal);
+        else printf( "Error: export filename not specified.\n");
+    }
     return 0;
 }
 

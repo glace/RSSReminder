@@ -155,7 +155,7 @@ int exportXmlDom( const char * filename, struct itemnode_t * itemList, int * ite
         xmlAddChild( node, sonNode );
     }
 
-    int nRel = xmlSaveFile( filename, doc);
+    int nRel = xmlSaveFormatFileEnc( filename, doc, "UTF-8", 1);
     /*if (nRel != -1)
         printf(" created, %d bytes.\n", nRel);*/
 
@@ -163,6 +163,143 @@ int exportXmlDom( const char * filename, struct itemnode_t * itemList, int * ite
 
     if (nRel != -1) return 1;
     else return 0;
+}
+
+int importXmlDom( const char * filename, struct itemnode_t * itemList, int * itemListTotal){
+    int subscript;
+    int subscriptCount;
+    int attrSubscript;
+    xmlChar * longStr;
+    xmlNodePtr node;
+    xmlNodePtr content;
+    xmlNodePtr sonNode;
+    xmlNodePtr grandsonNode;
+
+    int strType;
+    char title;
+    char attrTitle[100];
+    char attrValue[100];
+    int attrTotal;
+    int parent;
+    int tail;
+
+    *itemListTotal = 0;
+    itemList[0].type = IT_NOG;
+    itemList[0].attrTotal = 0;
+
+    xmlKeepBlanksDefault(0);
+
+    // create the doc and root node
+    xmlDocPtr doc = xmlReadFile( filename, "UTF-8", XML_PARSE_RECOVER );
+
+    if ( doc == NULL ){
+        printf("Error: xml Data file \"%s\" import failed.\n", filename);
+        return 0;
+    }
+
+    xmlNodePtr root_node = xmlDocGetRootElement( doc );
+
+    if ( root_node == NULL ){
+        printf("Error: failed to get the root of xml doc.\n");
+        return 0;
+    }
+
+    if ( xmlStrcmp( root_node->name, BAD_CAST "xmlDomList") != 0 ){
+        printf("Error: name of root node of xml doc not matched.\n");
+        return 0;
+    }
+
+    if ( xmlHasProp( root_node, BAD_CAST "itemListTotal") ){
+        longStr = xmlGetProp( root_node, BAD_CAST "itemListTotal" );
+        *itemListTotal = xatoi( (char *) longStr );
+        // printf("itemListTotal: %d\n", *itemListTotal );
+    }else{
+        printf("Error: failed to get the itemListTotal.\n");
+        return 0;
+    }
+
+    node = root_node->xmlChildrenNode;
+
+    for (subscriptCount=1; subscriptCount <= *itemListTotal; subscriptCount++){
+        // printf("subscriptCount: %d\n", subscriptCount);
+        if ( node == NULL ){
+            printf("Error: not enough item node.\n");
+            *itemListTotal = 0;
+            return 0;
+        }
+
+        if ( xmlHasProp( node, BAD_CAST "subscript") ){
+            longStr = xmlGetProp( node, BAD_CAST "subscript" );
+            subscript = xatoi( (char *) longStr );
+        }else{
+            printf("Error: failed to get the subscript of item.\n");
+            return 0;
+        }
+        // printf("subscript: %d\n", subscript);
+
+        sonNode = node->xmlChildrenNode;
+        while( sonNode != NULL ){
+            //     longStr = xmlNodeGetContent( sonNode );
+            // printf("name: %s\ncontent: %s\n", (char *) sonNode->name, (char *) longStr);
+
+            if ( xmlStrcmp( sonNode->name, BAD_CAST "type" ) == 0){
+                longStr = xmlNodeGetContent( sonNode );
+                itemList[subscript].type = xatoi( (char *) longStr );
+            }else if ( xmlStrcmp( sonNode->name, BAD_CAST "title" ) == 0){
+                longStr = xmlNodeGetContent( sonNode );
+                itemList[subscript].title = malloc( strlen(longStr) +1 );
+                strcpy( itemList[subscript].title, (char *) longStr );
+            }else if ( xmlStrcmp( sonNode->name, BAD_CAST "parent" ) == 0){
+                longStr = xmlNodeGetContent( sonNode );
+                itemList[subscript].parent= xatoi( (char *) longStr );
+            }else if ( xmlStrcmp( sonNode->name, BAD_CAST "tail" ) == 0){
+                longStr = xmlNodeGetContent( sonNode );
+                itemList[subscript].tail= xatoi( (char *) longStr );
+            }else if ( xmlStrcmp( sonNode->name, BAD_CAST "attr" ) == 0){
+                if ( xmlHasProp( sonNode, BAD_CAST "attrTotal") ){
+                    longStr = xmlGetProp( sonNode, BAD_CAST "attrTotal" );
+                    itemList[subscript].attrTotal = xatoi( (char *) longStr );
+                    grandsonNode = sonNode->xmlChildrenNode;
+                    while ( grandsonNode != NULL ){
+                        if ( !xmlHasProp( grandsonNode, BAD_CAST "attrSubscript" )){
+                            printf("Error: failed to get the attrSubscript.\n");
+                            *itemListTotal = 0;
+                            return 0;
+                        }
+                        longStr = xmlGetProp( grandsonNode, BAD_CAST "attrSubscript" );
+                        attrSubscript = xatoi( (char *) longStr );
+
+                        if ( xmlStrcmp( grandsonNode->name, BAD_CAST "attrTitle" ) == 0 ){
+                            longStr = xmlNodeGetContent( grandsonNode );
+                            itemList[subscript].attrTitle[attrSubscript] = malloc( strlen(longStr) +1 );
+                            strcpy( itemList[subscript].attrTitle[attrSubscript], (char *) longStr );
+                        }if ( xmlStrcmp( grandsonNode->name, BAD_CAST "attrValue" ) == 0 ){
+                            longStr = xmlNodeGetContent( grandsonNode );
+                            itemList[subscript].attrValue[attrSubscript] = malloc( strlen(longStr) +1 );
+                            strcpy( itemList[subscript].attrValue[attrSubscript], (char *) longStr );
+                        }
+                        grandsonNode = grandsonNode->next;
+                    }
+                }else{
+                    printf("Error: failed to get attrTotal.\n");
+                    *itemListTotal = 0;
+                    return 0;
+                }
+            }else{
+                printf("Error: unknown sonNode of xml doc item, %s", (char *) sonNode->name );
+                *itemListTotal = 0;
+                return 0;
+            }
+
+            sonNode = sonNode->next;
+        }
+
+        node = node->next;
+    }
+    // printf("import success.\n");
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+    return 1;
 }
 
 #endif

@@ -46,14 +46,31 @@
 
 struct globalArgs_t {
 	int noIndex;				/* -I option */
-	const char *rule;           /* -r --rule option */
+	const char *ruleFileName;           /* -r --rule option */
 	const char *outFileName;	/* -o option */
 	FILE *outFile;
-	int verbosity;				/* -v option */
+	int mode;				/* -v option */
 	char **inputFiles;			/* input files */
 	int numInputFiles;			/* # of input files */
     int debug_mode;             /* --debug option */
 } globalArgs;
+
+static const char *optString = "Ir:o:m:h?";
+
+static const struct option longOpts[] = {
+	{ "no-index", no_argument, NULL, 'I' },
+	{ "rule", required_argument, NULL, 'r' },
+	{ "output", required_argument, NULL, 'o' },
+	{ "mode", required_argument, NULL, 'm' },
+	{ "debug", no_argument, NULL, 0 },
+	{ "help", no_argument, NULL, 'h' },
+	{ NULL, no_argument, NULL, 0 }
+};
+
+enum{
+    MODE_PARSE_HTML,
+    MODE_GENERATE_XML
+};
 
 enum{
     IT_NOG,     // Nothing
