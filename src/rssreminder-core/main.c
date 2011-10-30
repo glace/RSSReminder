@@ -39,11 +39,6 @@
 #include "global.h"
 #include "xmldom.h"
 
-
-
-
-
-
 int display_usage(){
     printf("rssreminder-core\n");
     return 1;
