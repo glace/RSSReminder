@@ -208,6 +208,7 @@ int printSpace(int len){
 int printItemNode(struct itemnode_t * itemList, int nodeSubscript, int deepLen){
     int type;
     int parent;
+    int tail;
     int i;
     struct itemnode_t * target;
     if (nodeSubscript < 0 || nodeSubscript > itemListTotal) return 0;
@@ -215,12 +216,13 @@ int printItemNode(struct itemnode_t * itemList, int nodeSubscript, int deepLen){
     target = &itemList[nodeSubscript];
     type = target->type;
     parent = target->parent;
+    tail = target->tail;
     printSpace(deepLen);
     printIT(type);
     printf("\t\t nodeSubscript: %d", nodeSubscript);
 
     // printSpace(deepLen);
-    printf("\t parent: %d\n", parent);
+    printf("\t parent: %d\t tail: %d\n", parent, tail);
 
     printSpace(deepLen);
     if (type == IT_ITM || type == IT_TAL){
@@ -315,7 +317,7 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
                 itemList[*itemListTotal].title = str;
                 itemList[*itemListTotal].attrTotal = 0;
                 itemList[*itemListTotal].parent = parent;
-                itemList[*itemListTotal].tail = 0;
+                itemList[*itemListTotal].tail = *itemListTotal;
                 parentConfirm[*itemListTotal] = 0;
                 tailConfirm[*itemListTotal] = 0;
                 if (globalArgs.debug_mode) printf("%s\n", tword);
@@ -328,6 +330,7 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
             itemList[*itemListTotal].title = NULL;
             itemList[*itemListTotal].attrTotal = 0;
             itemList[*itemListTotal].parent = parent;
+            itemList[*itemListTotal].tail = *itemListTotal;
             // parent = *itemListTotal;
             type = IT_ITM;
         }else if (wordType == WT_ITM_END){
@@ -391,6 +394,7 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal){
         itemList[*itemListTotal].title = str;
         itemList[*itemListTotal].attrTotal = 0;
         itemList[*itemListTotal].parent = parent;
+        itemList[*itemListTotal].tail = *itemListTotal;
         strcpy(tword, "");
     }
     deepLen[0] = -1;
