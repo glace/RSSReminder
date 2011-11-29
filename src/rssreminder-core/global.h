@@ -91,6 +91,15 @@ enum{
     WT_NOG      // wordType Nothing
 };
 
+enum{
+    XML_ITEM_NOG,
+    XML_ITEM_REGION,
+    XML_ITEM_TITLE,
+    XML_ITEM_TIME,
+    XML_ITEM_CONTENT,
+    XML_ITEM_LAST
+};
+
 struct itemnode_t {
     int type;  // Text  ||  Item
     char * title;

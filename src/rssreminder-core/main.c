@@ -38,6 +38,7 @@
 
 #include "global.h"
 #include "xmldom.h"
+#include "xmlitem.h"
 
 int display_usage(){
     printf("rssreminder-core\n");
@@ -113,6 +114,7 @@ int parseCmdOpt( int argc, char *argv[] ){
 
 int main( int argc, char* argv[] ){
     char word[10000];
+    struct xmlDesc_t xmlDesc[10];
     int offset=0;
     parseCmdOpt(argc,argv);
     if ( globalArgs.mode == MODE_PARSE_HTML ){
@@ -126,6 +128,12 @@ int main( int argc, char* argv[] ){
     }else if ( globalArgs.mode == MODE_GENERATE_XML ){
         if (globalArgs.numInputFiles > 0)
             importXmlDom( globalArgs.inputFiles[0], itemList, &itemListTotal);
+            if (globalArgs.ruleFileName != NULL){
+                printf("ruleFileName: %s\n", globalArgs.ruleFileName);
+                importRuleFile( globalArgs.ruleFileName, itemList, &itemListTotal, xmlDesc );
+                generateXmlItem( itemList, &itemListTotal, xmlDesc, xmlItemList, &xmlItemListTotal );
+                // xmlDescPrint( &xmlDesc );
+            }
         else printf( "Error: import filename not specified.\n");
         if (globalArgs.outFileName != NULL)
             exportXmlDom( globalArgs.outFileName, itemList, &itemListTotal);
