@@ -53,4 +53,6 @@ int exportXmlDom( const char * filename, struct itemnode_t * itemList, int * ite
 
 int importXmlDom( const char * filename, struct itemnode_t * itemList, int * itemListTotal);
 
+int exportXmlDomForShow( const char * filename, struct itemnode_t * itemList, int * itemListTotal);
+
 #endif

@@ -241,6 +241,55 @@ int printItemNode(struct itemnode_t * itemList, int nodeSubscript, int deepLen){
     return 1;
 }
 
+int sprintItemNode(struct itemnode_t * itemList, int nodeSubscript, char * outStr, int deepLen){
+    char word[1000000];
+    int type;
+    int parent;
+    int tail;
+    int i;
+    struct itemnode_t * target;
+    strcpy( outStr, "" );
+    if (nodeSubscript < 0 || nodeSubscript > itemListTotal) return 0;
+    if (deepLen < 0) return 0;
+    target = &itemList[nodeSubscript];
+    type = target->type;
+    parent = target->parent;
+    tail = target->tail;
+
+    sprintf( word, "[\t%d ]: ", nodeSubscript );
+    strcat( outStr, word );
+    for ( i=1; i<=deepLen; i++ ) strcat( outStr, "    " );
+    // printIT(type);
+    // sprintf( word, "[ %d ]: ", nodeSubscript );
+    // strcat( outStr, word );
+
+    // printSpace(deepLen);
+    // sprintf(word, "\t parent: %d\t tail: %d\n", parent, tail);
+    // strcat( outStr, word );
+
+    // printSpace(deepLen);
+    if (type == IT_ITM || type == IT_TAL){
+        strcat( outStr, "<" );
+        // sprintf("<");
+        if (type == IT_TAL) strcat( outStr, "/" );
+        sprintf( word, "%s", target->title);
+        strcat( outStr, word );
+        for (i=0; i<target->attrTotal ; i++){
+            sprintf( word, " %s", target->attrTitle[i] );
+            strcat( outStr, word );
+            if (target->attrValue[i] != NULL){
+                sprintf( word, "=%s", target->attrValue[i] );
+                strcat( outStr, word );
+            }
+        }
+        strcat( outStr, ">" );
+    }else if (type == IT_TXT || type == IT_NOG){
+        sprintf( word, "%s", target->title );
+        strcat( outStr, word );
+    }
+    return 1;
+}
+
 int checkWordTypeForScript(int type, int scriptDeep, int wordType, char * fileContent, int offset){
     char word[1000000];
     char unformattedWord[1000000];

@@ -50,6 +50,7 @@ struct globalArgs_t {
 	const char *ruleFileName;           /* -r --rule option */
 	const char *xmlItemListFileName;           /* -x --xml option */
 	const char *alarmFileName;           /* --alarm option */
+	const char *xmlDomShwoFileName;           /* --alarm option */
 	const char *outFileName;	/* -o option */
 	FILE *outFile;
 	int mode;				/* -v option */
@@ -65,6 +66,7 @@ static const struct option longOpts[] = {
 	{ "rule", required_argument, NULL, 'r' },
 	{ "xml", required_argument, NULL, 'x' },
 	{ "alarm", required_argument, NULL, 0 },
+	{ "show", required_argument, NULL, 0 },
 	{ "output", required_argument, NULL, 'o' },
 	{ "mode", required_argument, NULL, 'm' },
 	{ "debug", no_argument, NULL, 0 },
@@ -142,6 +144,8 @@ int printIT(int itemnodeType);
 int printSpace(int len);
 
 int printItemNode(struct itemnode_t * itemList, int nodeSubscript, int deepLen);
+
+int sprintItemNode(struct itemnode_t * itemList, int nodeSubscript, char * outStr, int deepLen);
 
 int checkWordTypeForScript(int type, int scriptDeep, int wordType, char * fileContent, int offset);
 

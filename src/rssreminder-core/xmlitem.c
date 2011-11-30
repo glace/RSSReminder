@@ -517,10 +517,10 @@ int generateXmlItem( struct itemnode_t * itemList, int * itemListTotal, struct x
 
     // *xmlItemListTotal = 0;  // warning !!!  this line just for debuging
 
-    printf("{================\n");
-    for ( subscript=1; subscript<=*xmlItemListTotal; subscript++)
-        printXmlItemListNode( xmlItemList, xmlItemListTotal, subscript );
-    printf("}================\n");
+    // printf("{================\n");
+    // for ( subscript=1; subscript<=*xmlItemListTotal; subscript++)
+    //     printXmlItemListNode( xmlItemList, xmlItemListTotal, subscript );
+    // printf("}================\n");
 
     for (subscript=1; subscript<=xmlItemTotal; subscript++){
         printf("fetch\n\ttitle: %d\n\ttime: %d\n\tcontent: %d\n", flagXmlItem[subscript][XML_ITEM_TITLE],flagXmlItem[subscript][XML_ITEM_TIME],flagXmlItem[subscript][XML_ITEM_CONTENT]);
@@ -543,7 +543,7 @@ int generateXmlItem( struct itemnode_t * itemList, int * itemListTotal, struct x
         getItemContent( itemList, itemListTotal, flagContent, flagXmlItem[subscript][XML_ITEM_CONTENT], longStr );
         strcat( md5BaseStr, longStr );
         Rmd5( md5BaseStr, guid );
-        printf("md5 guid: %s\n", guid);
+        // printf("md5 guid: %s\n", guid);
         
         targetSubscript = xmlItemListSearch( xmlItemList, xmlItemListTotal, guid );
         // printf("%d\n",targetSubscript);
@@ -551,7 +551,7 @@ int generateXmlItem( struct itemnode_t * itemList, int * itemListTotal, struct x
             printf("not found, to create it. %d\n", targetSubscript);
             (*xmlItemListTotal)++;
             targetSubscript = *xmlItemListTotal;
-            printf("%d\n",targetSubscript);
+            // printf("%d\n",targetSubscript);
 
             xmlItemList[targetSubscript].text[FRSS_ITEM_TITLE] = NULL;
             // xmlItemList[targetSubscript].richText[FRSS_ITEM_TITLE] = NULL;
@@ -594,8 +594,9 @@ int generateXmlItem( struct itemnode_t * itemList, int * itemListTotal, struct x
             swapXmlItemListNode( xmlItemList, xmlItemListTotal, *xmlItemListTotal+subscript, subscript );
     }
 
-    for ( subscript=1; subscript<=*xmlItemListTotal; subscript++)
-        printXmlItemListNode( xmlItemList, xmlItemListTotal, subscript );
+    // for ( subscript=1; subscript<=*xmlItemListTotal; subscript++)
+    //     printXmlItemListNode( xmlItemList, xmlItemListTotal, subscript );
+
     // int a[10]={0,4,5,6,7,1,2,3};
     // int i;
     // for (i=1;i<=7;i++) printf(" %d",a[i]);

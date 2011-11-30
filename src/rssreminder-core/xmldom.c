@@ -292,3 +292,23 @@ int importXmlDom( const char * filename, struct itemnode_t * itemList, int * ite
     return 1;
 }
 
+int exportXmlDomForShow( const char * filename, struct itemnode_t * itemList, int * itemListTotal){
+    char longStr[100000];
+    int deepLen[MAX_ITEMLIST_LENGTH];
+    int subscript;
+    FILE * fout;
+
+    printf( "%s\n", filename );
+    fout = fopen( filename, "w" );
+    printf( "%s\n", filename );
+    deepLen[0] = -1;
+    for (subscript = 1; subscript <= *itemListTotal; subscript++)
+        deepLen[subscript] = deepLen[ itemList[subscript].parent ] + 1;
+    for (subscript=1; subscript<=*itemListTotal;subscript++){
+        sprintItemNode(itemList, subscript, longStr, deepLen[subscript]);
+        // printf( "%s\n", longStr );
+        fprintf( fout, "%s\n", longStr );
+    }
+    fclose( fout );
+    return 1;
+}

@@ -102,6 +102,9 @@ int parseCmdOpt( int argc, char *argv[] ){
                 if( strcmp( "alarm", longOpts[longIndex].name ) == 0 ) {
                     globalArgs.alarmFileName = optarg;
                 }
+                if( strcmp( "show", longOpts[longIndex].name ) == 0 ) {
+                    globalArgs.xmlDomShwoFileName = optarg;
+                }
                 if( strcmp( "debug", longOpts[longIndex].name ) == 0 ) {
                     globalArgs.debug_mode = 1;
                 }
@@ -143,6 +146,9 @@ int main( int argc, char* argv[] ){
                 // xmlDescPrint( &xmlDesc );
             }
         else printf( "Error: import filename not specified.\n");
+        if (globalArgs.xmlDomShwoFileName != NULL){
+            exportXmlDomForShow( globalArgs.xmlDomShwoFileName, itemList, &itemListTotal );
+        }else printf( "Error: xmlDomShwoFileName not specified. use --show option.\n");
         if (globalArgs.xmlItemListFileName != NULL){
             // exportXmlDom( globalArgs.outFileName, itemList, &itemListTotal);
             importXmlItemFile( globalArgs.xmlItemListFileName, xmlItemList, &xmlItemListTotal );
