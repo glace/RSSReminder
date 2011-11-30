@@ -52,6 +52,8 @@ int parseCmdOpt( int argc, char *argv[] ){
     /* Initialize globalArgs before we get to work. */
     globalArgs.noIndex = 0;		/* false */
     globalArgs.ruleFileName = NULL;
+    globalArgs.xmlItemListFileName = NULL;
+    globalArgs.alarmFileName = NULL;
     globalArgs.outFileName = NULL;
     globalArgs.outFile = NULL;
     globalArgs.mode = MODE_PARSE_HTML;
@@ -71,6 +73,10 @@ int parseCmdOpt( int argc, char *argv[] ){
                 
             case 'r':
                 globalArgs.ruleFileName = optarg;
+                break;
+
+            case 'x':
+                globalArgs.xmlItemListFileName = optarg;
                 break;
                 
             case 'o':
@@ -93,6 +99,9 @@ int parseCmdOpt( int argc, char *argv[] ){
                 break;
 
             case 0:     /* long option without a short arg */
+                if( strcmp( "alarm", longOpts[longIndex].name ) == 0 ) {
+                    globalArgs.alarmFileName = optarg;
+                }
                 if( strcmp( "debug", longOpts[longIndex].name ) == 0 ) {
                     globalArgs.debug_mode = 1;
                 }
@@ -131,13 +140,18 @@ int main( int argc, char* argv[] ){
             if (globalArgs.ruleFileName != NULL){
                 printf("ruleFileName: %s\n", globalArgs.ruleFileName);
                 importRuleFile( globalArgs.ruleFileName, itemList, &itemListTotal, xmlDesc );
-                generateXmlItem( itemList, &itemListTotal, xmlDesc, xmlItemList, &xmlItemListTotal );
                 // xmlDescPrint( &xmlDesc );
             }
         else printf( "Error: import filename not specified.\n");
-        if (globalArgs.outFileName != NULL)
-            exportXmlDom( globalArgs.outFileName, itemList, &itemListTotal);
-        else printf( "Error: export filename not specified.\n");
+        if (globalArgs.xmlItemListFileName != NULL){
+            // exportXmlDom( globalArgs.outFileName, itemList, &itemListTotal);
+            importXmlItemFile( globalArgs.xmlItemListFileName, xmlItemList, &xmlItemListTotal );
+            generateXmlItem( itemList, &itemListTotal, xmlDesc, xmlItemList, &xmlItemListTotal, &xmlItemListAlarmTotal );
+            exportXmlItemFile( globalArgs.xmlItemListFileName, xmlItemList, &xmlItemListTotal );
+        }else printf( "Error: xmlItemListFileName not specified. use -x / --xml option.\n");
+        if (globalArgs.alarmFileName != NULL){
+            exportXmlItemFileForAlarm( globalArgs.alarmFileName, xmlItemList, &xmlItemListTotal, &xmlItemListAlarmTotal );
+        }else printf( "Error: alarmFileName not specified. use --alarm option.\n");
     }
     return 0;
 }

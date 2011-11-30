@@ -43,10 +43,13 @@
 
 #define MAX_FILE_LENGTH 3000000
 #define MAX_ITEMLIST_LENGTH 100000 
+#define MAX_ITEMLIST_SAVE 100
 
 struct globalArgs_t {
 	int noIndex;				/* -I option */
 	const char *ruleFileName;           /* -r --rule option */
+	const char *xmlItemListFileName;           /* -x --xml option */
+	const char *alarmFileName;           /* --alarm option */
 	const char *outFileName;	/* -o option */
 	FILE *outFile;
 	int mode;				/* -v option */
@@ -55,11 +58,13 @@ struct globalArgs_t {
     int debug_mode;             /* --debug option */
 } globalArgs;
 
-static const char *optString = "Ir:o:m:h?";
+static const char *optString = "Ir:x:o:m:h?";
 
 static const struct option longOpts[] = {
 	{ "no-index", no_argument, NULL, 'I' },
 	{ "rule", required_argument, NULL, 'r' },
+	{ "xml", required_argument, NULL, 'x' },
+	{ "alarm", required_argument, NULL, 0 },
 	{ "output", required_argument, NULL, 'o' },
 	{ "mode", required_argument, NULL, 'm' },
 	{ "debug", no_argument, NULL, 0 },
@@ -145,5 +150,7 @@ int generateItemList(struct itemnode_t * itemList, int * itemListTotal);
 int init();
 
 int importFile( char * filename );
+
+int swap( int * a, int * b );
 
 #endif

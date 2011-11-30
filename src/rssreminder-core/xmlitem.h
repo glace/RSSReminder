@@ -40,6 +40,7 @@
 #include <string.h>
 
 #include "global.h"
+#include "md5.h"
 
 enum{
     XML_DESC_FORMAT_STANDARD,
@@ -76,8 +77,9 @@ struct xmlDescID_t{
     int data[10][100];
 };
 
-struct xmlItem_t xmlItemList[MAX_ITEMLIST_LENGTH];
+struct xmlItem_t xmlItemList[MAX_ITEMLIST_LENGTH];  // used start with subscript 1
 int xmlItemListTotal;
+int xmlItemListAlarmTotal;
 
 int importRuleFile( const char * filename, struct itemnode_t * itemList, int * itemListTotal, struct xmlDesc_t * xmlDesc );
 
@@ -87,7 +89,7 @@ int fetchRule( struct itemnode_t * itemList, int * itemListTotal, struct xmlDesc
 
 int fetchRuleSingle( struct itemnode_t item, struct xmlDesc_t xmlDesc );
 
-int generateXmlItem( struct itemnode_t * itemList, int * itemListTotal, struct xmlDesc_t * xmlDesc , struct xmlItem_t * xmlItemList, int * xmlItemListTotal );
+int generateXmlItem( struct itemnode_t * itemList, int * itemListTotal, struct xmlDesc_t * xmlDesc , struct xmlItem_t * xmlItemList, int * xmlItemListTotal, int * xmlItemListAlarmTotal );
 
 int xmlDescPrint( struct xmlDescID_t * xmlDesc);
 
@@ -96,5 +98,15 @@ int printDescNode(struct xmlDesc_t * xmlDesc, int nodeSubscript);
 int getItemContent( struct itemnode_t * itemList, int * itemListTotal, int * flag, int offset, char * outStr );
 
 int getItemRichContent( struct itemnode_t * itemList, int * itemListTotal, int * flag, int offset, char * outStr );
+
+int xmlItemListSearch( struct xmlItem_t * xmlItemList, int * xmlItemListTotal, char * guid );
+
+int printXmlItemListNode( struct xmlItem_t * xmlItemList, int * xmlItemListTotal, int targetSubscript );
+
+int importXmlItemFile( const char * filename, struct xmlItem_t * xmlItemList, int * xmlItemListTotal );
+
+int exportXmlItemFile( const char * filename, struct xmlItem_t * xmlItemList, int * xmlItemListTotal );
+
+int exportXmlItemFileForAlarm( const char * filename, struct xmlItem_t * xmlItemList, int * xmlItemListTotal, int * xmlItemListAlarmTotal );
 
 #endif 

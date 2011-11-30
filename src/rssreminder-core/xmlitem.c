@@ -31,6 +31,7 @@
 */
 
 #include "xmlitem.h"
+#include "md5.h"
 
 int exportRuleFile( const char * filename, struct xmlDesc_t * xmlDesc ){
     int subscript;
@@ -474,8 +475,10 @@ int fetchRule( struct itemnode_t * itemList, int * itemListTotal, struct xmlDesc
     return 1;
 }
 
-int generateXmlItem( struct itemnode_t * itemList, int * itemListTotal, struct xmlDesc_t * xmlDesc , struct xmlItem_t * xmlItemList, int * xmlItemListTotal ){
+int generateXmlItem( struct itemnode_t * itemList, int * itemListTotal, struct xmlDesc_t * xmlDesc , struct xmlItem_t * xmlItemList, int * xmlItemListTotal, int * xmlItemListAlarmTotal ){
     char longStr[100000];
+    char md5BaseStr[100000];
+    char guid[50];
     int flagRegion[MAX_ITEMLIST_LENGTH];
     int flagTitle[MAX_ITEMLIST_LENGTH];
     int flagTime[MAX_ITEMLIST_LENGTH];
@@ -485,6 +488,9 @@ int generateXmlItem( struct itemnode_t * itemList, int * itemListTotal, struct x
     int xmlItemTotal = 0;
 
     int subscript;
+    int targetSubscript;
+    int xmlItemListFreshPoint = 0;
+    int offset;
 
     fetchRule( itemList, itemListTotal, xmlDesc[XML_ITEM_REGION], flagRegion );
     fetchRule( itemList, itemListTotal, xmlDesc[XML_ITEM_TITLE], flagTitle );
@@ -508,17 +514,105 @@ int generateXmlItem( struct itemnode_t * itemList, int * itemListTotal, struct x
             flagXmlItem[xmlItemTotal][XML_ITEM_CONTENT] = subscript;
         }
     }
+
+    // *xmlItemListTotal = 0;  // warning !!!  this line just for debuging
+
+    printf("{================\n");
+    for ( subscript=1; subscript<=*xmlItemListTotal; subscript++)
+        printXmlItemListNode( xmlItemList, xmlItemListTotal, subscript );
+    printf("}================\n");
+
     for (subscript=1; subscript<=xmlItemTotal; subscript++){
         printf("fetch\n\ttitle: %d\n\ttime: %d\n\tcontent: %d\n", flagXmlItem[subscript][XML_ITEM_TITLE],flagXmlItem[subscript][XML_ITEM_TIME],flagXmlItem[subscript][XML_ITEM_CONTENT]);
+        // getItemContent( itemList, itemListTotal, flagTitle, flagXmlItem[subscript][XML_ITEM_TITLE], longStr );
+        // printf("%s\n", longStr);
+        // Rmd5(longStr,longStr);
+        // printf("%s\n",longStr);
+        // getItemRichContent( itemList, itemListTotal, flagTitle, flagXmlItem[subscript][XML_ITEM_TITLE], longStr );
+        // // printf("%s\n", longStr);
+        // getItemContent( itemList, itemListTotal, flagContent, flagXmlItem[subscript][XML_ITEM_CONTENT], longStr );
+        // printf("%s\n", longStr);
+        // Rmd5(longStr,longStr);
+        // printf("%s\n",longStr);
+        // getItemRichContent( itemList, itemListTotal, flagContent, flagXmlItem[subscript][XML_ITEM_CONTENT], longStr );
+        // // printf("%s\n", longStr);
+
+        strcpy( md5BaseStr, "" );
         getItemContent( itemList, itemListTotal, flagTitle, flagXmlItem[subscript][XML_ITEM_TITLE], longStr );
-        printf("%s\n", longStr);
-        getItemRichContent( itemList, itemListTotal, flagTitle, flagXmlItem[subscript][XML_ITEM_TITLE], longStr );
-        // printf("%s\n", longStr);
+        strcat( md5BaseStr, longStr );
         getItemContent( itemList, itemListTotal, flagContent, flagXmlItem[subscript][XML_ITEM_CONTENT], longStr );
-        printf("%s\n", longStr);
-        getItemRichContent( itemList, itemListTotal, flagContent, flagXmlItem[subscript][XML_ITEM_CONTENT], longStr );
-        // printf("%s\n", longStr);
+        strcat( md5BaseStr, longStr );
+        Rmd5( md5BaseStr, guid );
+        printf("md5 guid: %s\n", guid);
+        
+        targetSubscript = xmlItemListSearch( xmlItemList, xmlItemListTotal, guid );
+        // printf("%d\n",targetSubscript);
+        if ( targetSubscript == 0 ){
+            printf("not found, to create it. %d\n", targetSubscript);
+            (*xmlItemListTotal)++;
+            targetSubscript = *xmlItemListTotal;
+            printf("%d\n",targetSubscript);
+
+            xmlItemList[targetSubscript].text[FRSS_ITEM_TITLE] = NULL;
+            // xmlItemList[targetSubscript].richText[FRSS_ITEM_TITLE] = NULL;
+            xmlItemList[targetSubscript].text[FRSS_ITEM_TIME] = NULL;
+            // xmlItemList[targetSubscript].richText[FRSS_ITEM_TIME] = NULL;
+            xmlItemList[targetSubscript].text[FRSS_ITEM_CONTENT] = NULL;
+            xmlItemList[targetSubscript].richText[FRSS_ITEM_CONTENT] = NULL;
+            xmlItemList[targetSubscript].text[FRSS_ITEM_GUID] = NULL;
+            // xmlItemList[targetSubscript].richText[FRSS_ITEM_GUID] = NULL;
+            if ( xmlItemListFreshPoint == 0 ) xmlItemListFreshPoint = targetSubscript;
+
+            if ( getItemContent( itemList, itemListTotal, flagTitle, flagXmlItem[subscript][XML_ITEM_TITLE], longStr ) ){
+                xmlItemList[targetSubscript].text[FRSS_ITEM_TITLE] = malloc( strlen(longStr)+1 );
+                strcpy( xmlItemList[targetSubscript].text[FRSS_ITEM_TITLE], longStr );
+            }
+            if ( getItemContent( itemList, itemListTotal, flagTime, flagXmlItem[subscript][XML_ITEM_TIME], longStr ) ){
+                xmlItemList[targetSubscript].text[FRSS_ITEM_TIME] = malloc( strlen(longStr)+1 );
+                strcpy( xmlItemList[targetSubscript].text[FRSS_ITEM_TIME], longStr );
+            }
+            if ( getItemContent( itemList, itemListTotal, flagContent, flagXmlItem[subscript][XML_ITEM_CONTENT], longStr ) ){
+                xmlItemList[targetSubscript].text[FRSS_ITEM_CONTENT] = malloc( strlen(longStr)+1 );
+                strcpy( xmlItemList[targetSubscript].text[FRSS_ITEM_CONTENT], longStr );
+            }
+
+            xmlItemList[targetSubscript].text[FRSS_ITEM_GUID] = malloc( strlen(guid)+1 );
+            strcpy( xmlItemList[targetSubscript].text[FRSS_ITEM_GUID], guid );
+        }
     }
+    // for ( subscript=1; subscript<=*xmlItemListTotal; subscript++)
+    //     printXmlItemListNode( xmlItemList, xmlItemListTotal, subscript );
+
+    if ( xmlItemListFreshPoint != 0 ){
+        offset = *xmlItemListTotal - (xmlItemListFreshPoint-1);
+        *xmlItemListAlarmTotal = offset;
+        for ( subscript=1; subscript<=offset; subscript++ )
+            swapXmlItemListNode( xmlItemList, xmlItemListTotal, *xmlItemListTotal+subscript, xmlItemListFreshPoint-1+subscript );
+        for ( subscript=xmlItemListFreshPoint-1; subscript>=1; subscript--)
+            swapXmlItemListNode( xmlItemList, xmlItemListTotal, subscript, subscript+offset );
+        for ( subscript=1; subscript<=offset; subscript++ )
+            swapXmlItemListNode( xmlItemList, xmlItemListTotal, *xmlItemListTotal+subscript, subscript );
+    }
+
+    for ( subscript=1; subscript<=*xmlItemListTotal; subscript++)
+        printXmlItemListNode( xmlItemList, xmlItemListTotal, subscript );
+    // int a[10]={0,4,5,6,7,1,2,3};
+    // int i;
+    // for (i=1;i<=7;i++) printf(" %d",a[i]);
+    // printf("\n");
+    // xmlItemListFreshPoint = 5;
+    // *xmlItemListTotal=7;
+    // if ( xmlItemListFreshPoint != 0 ){
+    //     offset = 7- (xmlItemListFreshPoint-1);
+    //     for ( subscript=1; subscript<=offset; subscript++ )
+    //         swap(  &(a[*xmlItemListTotal+subscript]), &(a[xmlItemListFreshPoint-1+subscript]) );
+    //     for ( subscript=xmlItemListFreshPoint-1; subscript>=1; subscript--)
+    //         swap( &(a[subscript]), &(a[subscript+offset]) );
+    //     for ( subscript=1; subscript<=offset; subscript++ )
+    //         swap( &(a[*xmlItemListTotal+subscript]), &(a[subscript]) );
+    // }
+    // for (i=1;i<=7;i++) printf(" %d",a[i]);
+    // printf("\n");
 
     return 1;
 }
@@ -529,6 +623,7 @@ int getItemContent( struct itemnode_t * itemList, int * itemListTotal, int * fla
 
     strcpy( longStr, "" );
     strcpy( outStr, "" );
+    if ( offset <= 0 ) return 0;
     if ( flag[offset] != XML_FETCH_ITEM_START ) return 0;
     if ( itemList[offset].type == IT_TXT || itemList[offset].type == IT_NOG )
         strcpy( longStr, itemList[offset].title );
@@ -553,6 +648,7 @@ int getItemRichContent( struct itemnode_t * itemList, int * itemListTotal, int *
 
     strcpy( longStr, "" );
     strcpy( outStr, "" );
+    if ( offset <= 0 ) return 0;
     if ( flag[offset] != XML_FETCH_ITEM_START ) return 0;
     for (subscript=offset; subscript<=*itemListTotal; subscript++){
         if ( flag[subscript] != XML_FETCH_ITEM_CHILD && flag[subscript] != XML_FETCH_ITEM_START ) break;
@@ -581,4 +677,324 @@ int getItemRichContent( struct itemnode_t * itemList, int * itemListTotal, int *
     }
     strcpy( outStr, longStr );
     return 1;
+}
+
+int xmlItemListSearch( struct xmlItem_t * xmlItemList, int * xmlItemListTotal, char * guid ){
+    int subscript;
+    for (subscript=1; subscript<=*xmlItemListTotal; subscript++)
+        if ( xmlItemList[subscript].text[FRSS_ITEM_GUID] != NULL &&
+             strcmp( xmlItemList[subscript].text[FRSS_ITEM_GUID], guid ) == 0 )
+            return subscript;
+    return 0;
+}
+
+int printXmlItemListNode( struct xmlItem_t * xmlItemList, int * xmlItemListTotal, int targetSubscript ){
+    if ( targetSubscript <= 0 || targetSubscript > *xmlItemListTotal ) return 0;
+
+    printf( "xmlItemList subscript: %d\n", targetSubscript );
+    if ( xmlItemList[targetSubscript].text[FRSS_ITEM_TITLE] != NULL )
+        printf( "\ttitle:%s \n", xmlItemList[targetSubscript].text[FRSS_ITEM_TITLE] );
+    if ( xmlItemList[targetSubscript].text[FRSS_ITEM_TIME] != NULL )
+        printf( "\ttime:%s \n", xmlItemList[targetSubscript].text[FRSS_ITEM_TIME] );
+    if ( xmlItemList[targetSubscript].text[FRSS_ITEM_CONTENT] != NULL )
+        printf( "\tcontent:%s \n", xmlItemList[targetSubscript].text[FRSS_ITEM_CONTENT] );
+    if ( xmlItemList[targetSubscript].richText[FRSS_ITEM_CONTENT] != NULL )
+        printf( "\tRich content:%s \n", xmlItemList[targetSubscript].richText[FRSS_ITEM_CONTENT] );
+    if ( xmlItemList[targetSubscript].text[FRSS_ITEM_GUID] != NULL )
+        printf( "\tguid:%s \n", xmlItemList[targetSubscript].text[FRSS_ITEM_GUID] );
+
+    return 1;
+}
+
+int swapXmlItemListNode( struct xmlItem_t * xmlItemList, int * xmlItemListTotal, int aSub, int bSub ){
+    char * strPtr;
+    if ( aSub <= 0 || aSub > *xmlItemListTotal || bSub <= 0 || bSub > *xmlItemListTotal ) return 0;
+    strPtr = xmlItemList[ aSub ].text[FRSS_ITEM_TITLE];
+    xmlItemList[aSub].text[FRSS_ITEM_TITLE] = xmlItemList[bSub].text[FRSS_ITEM_TITLE];
+    xmlItemList[bSub].text[FRSS_ITEM_TITLE] = strPtr;
+
+    strPtr = xmlItemList[ aSub ].text[FRSS_ITEM_TIME];
+    xmlItemList[aSub].text[FRSS_ITEM_TIME] = xmlItemList[bSub].text[FRSS_ITEM_TIME];
+    xmlItemList[bSub].text[FRSS_ITEM_TIME] = strPtr;
+
+    strPtr = xmlItemList[ aSub ].text[FRSS_ITEM_CONTENT];
+    xmlItemList[aSub].text[FRSS_ITEM_CONTENT] = xmlItemList[bSub].text[FRSS_ITEM_CONTENT];
+    xmlItemList[bSub].text[FRSS_ITEM_CONTENT] = strPtr;
+
+    strPtr = xmlItemList[ aSub ].richText[FRSS_ITEM_CONTENT];
+    xmlItemList[aSub].richText[FRSS_ITEM_CONTENT] = xmlItemList[bSub].richText[FRSS_ITEM_CONTENT];
+    xmlItemList[bSub].richText[FRSS_ITEM_CONTENT] = strPtr;
+
+    strPtr = xmlItemList[ aSub ].text[FRSS_ITEM_GUID];
+    xmlItemList[aSub].text[FRSS_ITEM_GUID] = xmlItemList[bSub].text[FRSS_ITEM_GUID];
+    xmlItemList[bSub].text[FRSS_ITEM_GUID] = strPtr;
+
+    return 1;
+}
+
+int importXmlItemFile( const char * filename, struct xmlItem_t * xmlItemList, int * xmlItemListTotal ){
+    int subscript;
+    int subscriptCount;
+    int attrSubscript;
+    xmlChar * longStr;
+    xmlNodePtr node;
+    xmlNodePtr content;
+    xmlNodePtr sonNode;
+    xmlNodePtr grandsonNode;
+
+    int strType;
+    char title;
+    char attrTitle[100];
+    char attrValue[100];
+    int attrTotal;
+    int parent;
+    int tail;
+
+    *xmlItemListTotal = 0;
+
+    xmlKeepBlanksDefault(0);
+
+    // create the doc and root node
+    xmlDocPtr doc = xmlReadFile( filename, "UTF-8", XML_PARSE_RECOVER );
+
+    if ( doc == NULL ){
+        printf("Error: xml Data file \"%s\" import failed.\n", filename);
+        exportXmlItemFile( filename, xmlItemList, xmlItemListTotal );
+        return 0;
+    }
+
+    xmlNodePtr root_node = xmlDocGetRootElement( doc );
+
+    if ( root_node == NULL ){
+        printf("Error: failed to get the root of xml doc.\n");
+        return 0;
+    }
+
+    if ( xmlStrcmp( root_node->name, BAD_CAST "xmlItemList") != 0 ){
+        printf("Error: name of root node of xml doc not matched.\n");
+        return 0;
+    }
+
+    if ( xmlHasProp( root_node, BAD_CAST "xmlItemListTotal") ){
+        longStr = xmlGetProp( root_node, BAD_CAST "xmlItemListTotal" );
+        *xmlItemListTotal = xatoi( (char *) longStr );
+        if ( *xmlItemListTotal > MAX_ITEMLIST_SAVE ) *xmlItemListTotal = MAX_ITEMLIST_SAVE;
+        // printf("itemListTotal: %d\n", *itemListTotal );
+    }else{
+        printf("Error: failed to get the itemListTotal.\n");
+        return 0;
+    }
+
+    node = root_node->xmlChildrenNode;
+
+    for (subscriptCount=1; subscriptCount <= *xmlItemListTotal; subscriptCount++){
+        // printf("subscriptCount: %d\n", subscriptCount);
+        if ( node == NULL ){
+            printf("Error: not enough item node.\n");
+            *xmlItemListTotal = 0;
+            return 0;
+        }
+
+        subscript = subscriptCount;
+        // if ( xmlHasProp( node, BAD_CAST "subscript") ){
+        //     longStr = xmlGetProp( node, BAD_CAST "subscript" );
+        //     subscript = xatoi( (char *) longStr );
+        // }else{
+        //     printf("Error: failed to get the subscript of item.\n");
+        //     return 0;
+        // }
+        // printf("subscript: %d\n", subscript);
+        xmlItemList[subscript].text[FRSS_ITEM_TITLE] = NULL;
+        xmlItemList[subscript].text[FRSS_ITEM_TIME] = NULL;
+        xmlItemList[subscript].text[FRSS_ITEM_CONTENT] = NULL;
+        xmlItemList[subscript].richText[FRSS_ITEM_CONTENT] = NULL;
+        xmlItemList[subscript].text[FRSS_ITEM_GUID] = NULL;
+
+        sonNode = node->xmlChildrenNode;
+        while( sonNode != NULL ){
+            //     longStr = xmlNodeGetContent( sonNode );
+            // printf("name: %s\ncontent: %s\n", (char *) sonNode->name, (char *) longStr);
+
+            if ( xmlStrcmp( sonNode->name, BAD_CAST "title" ) == 0){
+                longStr = xmlNodeGetContent( sonNode );
+                xmlItemList[subscript].text[FRSS_ITEM_TITLE] = malloc( strlen(longStr) +1 );
+                strcpy( xmlItemList[subscript].text[FRSS_ITEM_TITLE], (char *) longStr );
+            }else if ( xmlStrcmp( sonNode->name, BAD_CAST "time" ) == 0){
+                longStr = xmlNodeGetContent( sonNode );
+                xmlItemList[subscript].text[FRSS_ITEM_TIME] = malloc( strlen(longStr) +1 );
+                strcpy( xmlItemList[subscript].text[FRSS_ITEM_TIME], (char *) longStr );
+            }else if ( xmlStrcmp( sonNode->name, BAD_CAST "content" ) == 0){
+                longStr = xmlNodeGetContent( sonNode );
+                xmlItemList[subscript].text[FRSS_ITEM_CONTENT] = malloc( strlen(longStr) +1 );
+                strcpy( xmlItemList[subscript].text[FRSS_ITEM_CONTENT], (char *) longStr );
+            }else if ( xmlStrcmp( sonNode->name, BAD_CAST "content:encoded" ) == 0){
+                longStr = xmlNodeGetContent( sonNode );
+                xmlItemList[subscript].richText[FRSS_ITEM_CONTENT] = malloc( strlen(longStr) +1 );
+                strcpy( xmlItemList[subscript].richText[FRSS_ITEM_CONTENT], (char *) longStr );
+            }else if ( xmlStrcmp( sonNode->name, BAD_CAST "guid" ) == 0){
+                longStr = xmlNodeGetContent( sonNode );
+                xmlItemList[subscript].text[FRSS_ITEM_GUID] = malloc( strlen(longStr) +1 );
+                strcpy( xmlItemList[subscript].text[FRSS_ITEM_GUID], (char *) longStr );
+            }else{
+                printf("Error: unknown sonNode of xml doc item, %s", (char *) sonNode->name );
+                *xmlItemListTotal = 0;
+                return 0;
+            }
+
+            sonNode = sonNode->next;
+        }
+
+        node = node->next;
+    }
+    printf("import success.\n");
+    printf("xmlItemListTotal: %d\n", *xmlItemListTotal);
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+    return 1;
+}
+
+int exportXmlItemFile( const char * filename, struct xmlItem_t * xmlItemList, int * xmlItemListTotal ){
+    int subscript;
+    int attrSubscript;
+    char longStr[100000];
+    xmlNodePtr node;
+    xmlNodePtr content;
+    xmlNodePtr sonNode;
+    xmlNodePtr grandsonNode;
+
+    // create the doc and root node
+    xmlDocPtr doc = xmlNewDoc( BAD_CAST "1.0" );
+    xmlNodePtr root_node = xmlNewNode( NULL, BAD_CAST "xmlItemList" );
+
+    xitoa( longStr, *xmlItemListTotal );
+    xmlNewProp( root_node, BAD_CAST "xmlItemListTotal", BAD_CAST longStr );
+
+    // set the root node
+    xmlDocSetRootElement( doc, root_node );
+
+    if ( *xmlItemListTotal > MAX_ITEMLIST_SAVE ) *xmlItemListTotal = MAX_ITEMLIST_SAVE;
+    
+
+    for (subscript=1; subscript <= *xmlItemListTotal; subscript++){
+        node = xmlNewNode( NULL, BAD_CAST "item" );
+        xmlAddChild( root_node, node );
+
+        // xitoa( longStr, subscript );
+        // xmlNewProp( node, BAD_CAST "subscript", BAD_CAST longStr );
+
+        if ( xmlItemList[subscript].text[FRSS_ITEM_TITLE] != NULL ){
+            sonNode = xmlNewNode( NULL, BAD_CAST "title" );
+            content = xmlNewCDataBlock( NULL, BAD_CAST xmlItemList[subscript].text[FRSS_ITEM_TITLE], strlen(xmlItemList[subscript].text[FRSS_ITEM_TITLE]) );
+            xmlAddChild( sonNode, content );
+            xmlAddChild( node, sonNode );
+        }
+        if ( xmlItemList[subscript].text[FRSS_ITEM_TIME] != NULL ){
+            sonNode = xmlNewNode( NULL, BAD_CAST "time" );
+            content = xmlNewCDataBlock( NULL, BAD_CAST xmlItemList[subscript].text[FRSS_ITEM_TIME], strlen(xmlItemList[subscript].text[FRSS_ITEM_TIME]) );
+            xmlAddChild( sonNode, content );
+            xmlAddChild( node, sonNode );
+        }
+        if ( xmlItemList[subscript].text[FRSS_ITEM_CONTENT] != NULL ){
+            sonNode = xmlNewNode( NULL, BAD_CAST "content" );
+            content = xmlNewCDataBlock( NULL, BAD_CAST xmlItemList[subscript].text[FRSS_ITEM_CONTENT], strlen(xmlItemList[subscript].text[FRSS_ITEM_CONTENT]) );
+            xmlAddChild( sonNode, content );
+            xmlAddChild( node, sonNode );
+        }
+        if ( xmlItemList[subscript].richText[FRSS_ITEM_CONTENT] != NULL ){
+            sonNode = xmlNewNode( NULL, BAD_CAST "content:encoded" );
+            content = xmlNewCDataBlock( NULL, BAD_CAST xmlItemList[subscript].richText[FRSS_ITEM_CONTENT], strlen(xmlItemList[subscript].richText[FRSS_ITEM_CONTENT]) );
+            xmlAddChild( sonNode, content );
+            xmlAddChild( node, sonNode );
+        }
+        if ( xmlItemList[subscript].text[FRSS_ITEM_GUID] != NULL ){
+            sonNode = xmlNewNode( NULL, BAD_CAST "guid" );
+            content = xmlNewCDataBlock( NULL, BAD_CAST xmlItemList[subscript].text[FRSS_ITEM_GUID], strlen(xmlItemList[subscript].text[FRSS_ITEM_GUID]) );
+            xmlAddChild( sonNode, content );
+            xmlAddChild( node, sonNode );
+        }
+    }
+
+    int nRel = xmlSaveFormatFileEnc( filename, doc, "UTF-8", 1);
+    /*if (nRel != -1)
+        printf(" created, %d bytes.\n", nRel);*/
+
+    xmlFreeDoc(doc);
+
+    if (nRel != -1) return 1;
+    else return 0;
+}
+
+int exportXmlItemFileForAlarm( const char * filename, struct xmlItem_t * xmlItemList, int * xmlItemListTotal, int * xmlItemListAlarmTotal ){
+    int subscript;
+    char longStr[100000];
+    char message[500];
+    xmlNodePtr node;
+    xmlNodePtr content;
+    xmlNodePtr sonNode;
+    xmlNodePtr grandsonNode;
+
+    // create the doc and root node
+    xmlDocPtr doc = xmlNewDoc( BAD_CAST "1.0" );
+    xmlNodePtr root_node = xmlNewNode( NULL, BAD_CAST "xmlItemListAlarm" );
+
+    xitoa( longStr, *xmlItemListAlarmTotal);
+    xmlNewProp( root_node, BAD_CAST "xmlItemListAlarmTotal", BAD_CAST longStr );
+
+    // set the root node
+    xmlDocSetRootElement( doc, root_node );
+
+    if ( *xmlItemListAlarmTotal > *xmlItemListTotal ) *xmlItemListAlarmTotal = *xmlItemListTotal;
+    
+
+    for (subscript=1; subscript <= *xmlItemListAlarmTotal; subscript++){
+        node = xmlNewNode( NULL, BAD_CAST "item" );
+        xmlAddChild( root_node, node );
+
+        // xitoa( longStr, subscript );
+        // xmlNewProp( node, BAD_CAST "subscript", BAD_CAST longStr );
+
+        strcpy( longStr, "RSSR Alarm. \n" );
+        if ( xmlItemList[subscript].text[FRSS_ITEM_TITLE] != NULL ){
+            // sonNode = xmlNewNode( NULL, BAD_CAST "title" );
+            // content = xmlNewCDataBlock( NULL, BAD_CAST xmlItemList[subscript].text[FRSS_ITEM_TITLE], strlen(xmlItemList[subscript].text[FRSS_ITEM_TITLE]) );
+            // xmlAddChild( sonNode, content );
+            // xmlAddChild( node, sonNode );
+            strcat( longStr, " Title: " );
+            strcat( longStr, xmlItemList[subscript].text[FRSS_ITEM_TITLE] );
+            strcat( longStr, " \n" );
+        }
+        if ( xmlItemList[subscript].text[FRSS_ITEM_TIME] != NULL ){
+            strcat( longStr, " Time: " );
+            strcat( longStr, xmlItemList[subscript].text[FRSS_ITEM_TIME] );
+            strcat( longStr, " \n" );
+        }
+        if ( xmlItemList[subscript].text[FRSS_ITEM_CONTENT] != NULL ){
+            strcat( longStr, " Content: " );
+            // strncpy( message, xmlItemList[subscript].text[FRSS_ITEM_CONTENT], 300 );
+            strcat( longStr, xmlItemList[subscript].text[FRSS_ITEM_CONTENT] );
+            // strcat( longStr, message );
+            strcat( longStr, " \n" );
+
+            // sonNode = xmlNewNode( NULL, BAD_CAST "title" );
+            // content = xmlNewCDataBlock( NULL, BAD_CAST xmlItemList[subscript].text[FRSS_ITEM_CONTENT], strlen(xmlItemList[subscript].text[FRSS_ITEM_CONTENT]) );
+            // printf( "%s\n", xmlItemList[subscript].text[FRSS_ITEM_CONTENT]);
+            // xmlAddChild( sonNode, content );
+            // xmlAddChild( node, sonNode );
+        }
+        sonNode = xmlNewNode( NULL, BAD_CAST "message" );
+        content = xmlNewCDataBlock( NULL, BAD_CAST longStr, strlen(longStr) );
+        // printf( "%s",longStr );
+        // content = xmlNewCDataBlock( NULL, BAD_CAST xmlItemList[subscript].text[FRSS_ITEM_CONTENT], strlen(xmlItemList[subscript].text[FRSS_ITEM_CONTENT]) );
+        xmlAddChild( sonNode, content );
+        xmlAddChild( node, sonNode );
+    }
+
+    int nRel = xmlSaveFormatFileEnc( filename, doc, "UTF-8", 1);
+    /*if (nRel != -1)
+        printf(" created, %d bytes.\n", nRel);*/
+
+    xmlFreeDoc(doc);
+
+    if (nRel != -1) return 1;
+    else return 0;
 }
