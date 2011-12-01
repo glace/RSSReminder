@@ -30,39 +30,13 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "global.h"
+#ifndef RSSR_MD5_H
+#define RSSR_MD5_H
 
-// int errReport(const char * errinfo){
-//     printf("%s\n",errinfo);
-//     return 0;
-// }
+#include<stdio.h>
+#include<openssl/md5.h>
+#include<string.h>
 
-// int init(){
-//     fileContentLen=0;
-//     strcpy(fileContent,"0");
-//     return 1;
-// }
+int Rmd5( char * data, char * outStr );
 
-// int importFile( char * filename ){
-//     FILE * fin;
-//     char ch;
-//     fileContentLen = 0;
-//     fin = fopen(filename, "r");
-//     if (!fin){
-//         printf("error\n");
-//         return 0;
-//     }
-//     while ( EOF != ( ch = fgetc( fin ) ) ){
-//         fileContent[fileContentLen++] = ch;
-//         if (fileContentLen + 1 > MAX_FILE_LENGTH) break;
-//     }
-//     fileContent[fileContentLen] = '\0';
-//     fclose(fin);
-//     return 1;
-// }
-
-int swap( int * a, int * b ){
-    int c;
-    c = *a;*a=*b;*b=c;
-    return 1;
-}
+#endif

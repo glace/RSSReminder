@@ -30,39 +30,41 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "global.h"
+#ifndef DATABASE_H
+#define DATABASE_H
 
-// int errReport(const char * errinfo){
-//     printf("%s\n",errinfo);
-//     return 0;
-// }
+#include <stdio.h>
+#include <stdlib.h>
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+#include <string.h>
 
-// int init(){
-//     fileContentLen=0;
-//     strcpy(fileContent,"0");
-//     return 1;
-// }
+#define MAX_DATABASE_SAVE 100
+#define MAX_DATABASE_LENGTH 1000 
 
-// int importFile( char * filename ){
-//     FILE * fin;
-//     char ch;
-//     fileContentLen = 0;
-//     fin = fopen(filename, "r");
-//     if (!fin){
-//         printf("error\n");
-//         return 0;
-//     }
-//     while ( EOF != ( ch = fgetc( fin ) ) ){
-//         fileContent[fileContentLen++] = ch;
-//         if (fileContentLen + 1 > MAX_FILE_LENGTH) break;
-//     }
-//     fileContent[fileContentLen] = '\0';
-//     fclose(fin);
-//     return 1;
-// }
+struct database_t{
+    char * url;
+    char * urlstatus;
+    char * filenamePrefix;
+};
 
-int swap( int * a, int * b ){
-    int c;
-    c = *a;*a=*b;*b=c;
-    return 1;
-}
+struct userAttr_t{
+    char * userStatus;
+    char * mobileNumber;
+};
+
+struct database_t databaseList[MAX_DATABASE_LENGTH];
+int databaseListTotal;  // used start with subscript 1
+// int databaseCount;
+
+struct userAttr_t userAttr;
+
+int xatoi( char * inStr );
+
+int xitoa( char * outStr, int Innum);
+
+int importDatabase( const char * filename, struct database_t * databaseList, int * databaseListTotal, struct userAttr_t * userAttr );
+
+int exportDatabase( const char * filename, struct database_t * databaseList, int * databaseListTotal, struct userAttr_t * userAttr );
+
+#endif 

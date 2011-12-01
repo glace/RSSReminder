@@ -39,6 +39,8 @@
 #include <getopt.h>
 #include <string.h>
 
+#include "md5.h"
+
 #define DEBUG_MODE 1 
 
 #define MAX_FILE_LENGTH 3000000
@@ -52,6 +54,11 @@ struct globalArgs_t {
 	const char *alarmFileName;           /* --alarm option */
 	const char *xmlDomShwoFileName;           /* --alarm option */
 	const char *outFileName;	/* -o option */
+	const char *username;	/* -u --username option */
+	const char *url;	/* --url option */
+	const char *prefix;	/* --url option */
+
+	const char *databaseFileName;
 	FILE *outFile;
 	int mode;				/* -v option */
 	char **inputFiles;			/* input files */
@@ -59,12 +66,14 @@ struct globalArgs_t {
     int debug_mode;             /* --debug option */
 } globalArgs;
 
-static const char *optString = "Ir:x:o:m:h?";
+static const char *optString = "Ir:u:x:o:m:h?";
 
 static const struct option longOpts[] = {
 	{ "no-index", no_argument, NULL, 'I' },
 	{ "rule", required_argument, NULL, 'r' },
 	{ "username", required_argument, NULL, 'u' },
+	{ "url", required_argument, NULL, 0 },
+	{ "prefix", required_argument, NULL, 0 },
 	{ "xml", required_argument, NULL, 'x' },
 	{ "alarm", required_argument, NULL, 0 },
 	{ "show", required_argument, NULL, 0 },
@@ -80,32 +89,36 @@ enum{
     MODE_USER_ADD,
     MODE_USER_DEL,
     MODE_SET_RULEFILE,
+    MODE_SET_USERSTATUS_ENABLE,
+    MODE_SET_USERSTATUS_DISABLE,
     MODE_TEST_RULEFILE,
     MODE_URL_ADD,
     MODE_URL_DEL,
     MODE_URL_ENABLE,
-    MODE_URL_DISABLE
+    MODE_URL_DISABLE,
+    MODE_REFRESH,
+    MODE_SHOW_USERINFO
 };
 
-enum{
-    XML_ITEM_NOG,
-    XML_ITEM_REGION,
-    XML_ITEM_TITLE,
-    XML_ITEM_TIME,
-    XML_ITEM_CONTENT,
-    XML_ITEM_LAST
-};
+// enum{
+//     XML_ITEM_NOG,
+//     XML_ITEM_REGION,
+//     XML_ITEM_TITLE,
+//     XML_ITEM_TIME,
+//     XML_ITEM_CONTENT,
+//     XML_ITEM_LAST
+// };
 
-char fileContent[MAX_FILE_LENGTH];
-int fileContentLen;
-int itemListTotal;
-int isodd(int num);
+// char fileContent[MAX_FILE_LENGTH];
+// int fileContentLen;
+// int itemListTotal;
+// int isodd(int num);
 
 // int errReport(const char * errinfo);
 
-int init();
+// int init();
 
-int importFile( char * filename );
+// int importFile( char * filename );
 
 int swap( int * a, int * b );
 

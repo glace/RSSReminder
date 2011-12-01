@@ -197,6 +197,8 @@ int execute_inner(struct cmdnode_t * InCmdList, int current, int cmdtotal){
     int fin,fout;
     int pid;
     int pid2;
+    int pid_status;
+    int pid2_status;
     if (current >= cmdtotal) return 1;
     if (current < 0) return errReport("execute function call failed.");
     if (pipe(InCmdList[current].pipe_fd) < 0) return errReport("pipe create failed.");
@@ -235,8 +237,17 @@ int execute_inner(struct cmdnode_t * InCmdList, int current, int cmdtotal){
             
         }else{
             close(InCmdList[current].pipe_fd[1]);
-            waitpid(pid2, NULL ,0);
-            waitpid(pid, NULL ,0);
+            waitpid(pid2, &pid2_status, 0);
+            waitpid(pid, &pid_status, 0);
+            // if ( WIFEXITED(pid_status) ){
+            //     printf(" WIFEXITED pid1 %X \n", WEXITSTATUS(pid_status));
+            // }
+            // if ( WIFEXITED(pid2_status) ){
+            //     printf(" WIFEXITED pid2 %X \n", WEXITSTATUS(pid2_status));
+            // }
+            // printf("pid_status: %d   pid2_status: %d\n", WEXITSTATUS(pid_status), WEXITSTATUS(pid2_status));
+            if ( current+1>=cmdtotal ) return WEXITSTATUS(pid_status);
+            else return WEXITSTATUS(pid2_status);
         }
             
     }

@@ -30,39 +30,20 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "global.h"
+#include "md5.h"
 
-// int errReport(const char * errinfo){
-//     printf("%s\n",errinfo);
-//     return 0;
-// }
-
-// int init(){
-//     fileContentLen=0;
-//     strcpy(fileContent,"0");
-//     return 1;
-// }
-
-// int importFile( char * filename ){
-//     FILE * fin;
-//     char ch;
-//     fileContentLen = 0;
-//     fin = fopen(filename, "r");
-//     if (!fin){
-//         printf("error\n");
-//         return 0;
-//     }
-//     while ( EOF != ( ch = fgetc( fin ) ) ){
-//         fileContent[fileContentLen++] = ch;
-//         if (fileContentLen + 1 > MAX_FILE_LENGTH) break;
-//     }
-//     fileContent[fileContentLen] = '\0';
-//     fclose(fin);
-//     return 1;
-// }
-
-int swap( int * a, int * b ){
-    int c;
-    c = *a;*a=*b;*b=c;
+int Rmd5( char * data, char * outStr ){
+    // unsigned char *data = "123";
+    unsigned char md[16];
+    int i;
+    char tmp[3]={'\0'},buf[33]={'\0'};
+    MD5((unsigned char *)data,strlen(data),md);
+    for (i = 0; i < 16; i++){
+        sprintf(tmp,"%2.2x",md[i]);
+        strcat(buf,tmp);
+    }
+    buf[6]='\0';
+    printf("%s\n",buf);
+    strcpy( outStr, buf );
     return 1;
 }
